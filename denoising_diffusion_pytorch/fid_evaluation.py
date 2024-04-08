@@ -1,12 +1,11 @@
 import math
 import os
-
 import numpy as np
 import torch
+from torch.nn.functional import adaptive_avg_pool2d
 from einops import rearrange, repeat
 from pytorch_fid.fid_score import calculate_frechet_distance
 from pytorch_fid.inception import InceptionV3
-from torch.nn.functional import adaptive_avg_pool2d
 from tqdm.auto import tqdm
 
 

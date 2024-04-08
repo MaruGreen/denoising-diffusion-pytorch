@@ -1,27 +1,26 @@
 from functools import wraps
 from packaging import version
 from collections import namedtuple
-
 import torch
 from torch import nn, einsum
 import torch.nn.functional as F
 
-from einops import rearrange
-
 # constants
-
 AttentionConfig = namedtuple('AttentionConfig', ['enable_flash', 'enable_math', 'enable_mem_efficient'])
 
-# helpers
 
+# helpers
 def exists(val):
     return val is not None
+
 
 def default(val, d):
     return val if exists(val) else d
 
+
 def once(fn):
     called = False
+
     @wraps(fn)
     def inner(x):
         nonlocal called
@@ -29,18 +28,21 @@ def once(fn):
             return
         called = True
         return fn(x)
+
     return inner
 
+
 print_once = once(print)
+
 
 # main class
 
 class Attend(nn.Module):
     def __init__(
-        self,
-        dropout = 0.,
-        flash = False,
-        scale = None
+            self,
+            dropout=0.,
+            flash=False,
+            scale=None
     ):
         super().__init__()
         self.dropout = dropout
@@ -48,7 +50,8 @@ class Attend(nn.Module):
         self.attn_dropout = nn.Dropout(dropout)
 
         self.flash = flash
-        assert not (flash and version.parse(torch.__version__) < version.parse('2.0.0')), 'in order to use flash attention, you must be using pytorch 2.0 or above'
+        assert not (flash and version.parse(torch.__version__) < version.parse(
+            '2.0.0')), 'in order to use flash attention, you must be using pytorch 2.0 or above'
 
         # determine efficient attention configs for cuda and cpu
 
@@ -85,7 +88,7 @@ class Attend(nn.Module):
         with torch.backends.cuda.sdp_kernel(**config._asdict()):
             out = F.scaled_dot_product_attention(
                 q, k, v,
-                dropout_p = self.dropout if self.training else 0.
+                dropout_p=self.dropout if self.training else 0.
             )
 
         return out
@@ -112,7 +115,7 @@ class Attend(nn.Module):
 
         # attention
 
-        attn = sim.softmax(dim = -1)
+        attn = sim.softmax(dim=-1)
         attn = self.attn_dropout(attn)
 
         # aggregate values
